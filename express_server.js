@@ -13,6 +13,8 @@ function generateRandomString() {
   return result;
 }
 
+app.use(express.urlencoded({ extended: true }));
+
 app.set('view engine', 'ejs');
 
 const urlDatabase = {
@@ -24,10 +26,6 @@ app.get('/', (req, res) => {
   res.send('Hello!');
 });
 
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
-});
-
 app.get('/urls.json', (req, res) => {
   res.json(urlDatabase);
 });
@@ -35,8 +33,6 @@ app.get('/urls.json', (req, res) => {
 app.get('/hello', (req, res) => {
   res.send('<html><body>Hello <b>World</b></body></html>\n');
 });
-
-app.use(express.urlencoded({ extended: true }));
 
 app.get('/urls', (req, res) => {
   const templateVars = { urls: urlDatabase };
@@ -65,4 +61,14 @@ app.get('/u/:id', (req, res) => {
   const shortURL = req.params.id;
   const longURL = urlDatabase[shortURL];
   res.redirect(longURL);
+});
+
+app.post('/urls/:id/delete', (req, res) => {
+  const shortURL = req.params.id;
+  delete urlDatabase[shortURL];
+  res.redirect('/urls');
+});
+
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
 });

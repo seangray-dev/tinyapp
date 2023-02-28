@@ -1,3 +1,4 @@
+const { request } = require('express');
 const express = require('express');
 const app = express();
 const PORT = 8080; // default port 8080
@@ -52,6 +53,16 @@ app.get('/urls/:id', (req, res) => {
 });
 
 app.post('/urls', (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
-  res.send('Ok'); // Respond with 'Ok' (we will replace this)
+  // Generate a new short URL
+  const shortURL = generateRandomString();
+  // Add the key-value pair to the database
+  urlDatabase[shortURL] = req.body.longURL;
+  // Redirect to the newly created short URL page
+  res.redirect(`/urls/${shortURL}`);
+});
+
+app.get('/u/:id', (req, res) => {
+  const shortURL = req.params.id;
+  const longURL = urlDatabase[shortURL];
+  res.redirect(longURL);
 });

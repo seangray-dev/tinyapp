@@ -17,12 +17,7 @@ function generateRandomString() {
 
 // function to lookup user-email
 function getUserByEmail(email, users) {
-  for (const userId in users) {
-    if (users[userId].email === email) {
-      return users[userId];
-    }
-  }
-  return null;
+  return Object.values(users).find((user) => user.email === email) || null;
 }
 
 // middleware
@@ -34,6 +29,16 @@ app.use((req, res, next) => {
   req.user = user;
   next();
 });
+// redirect logged in users
+const redirectLoggedIn = (req, res, next) => {
+  const userId = req.cookies.userId;
+  const user = users[userId];
+  if (user) {
+    res.redirect('/urls');
+  } else {
+    next();
+  }
+};
 
 // set view engine to EJS
 app.set('view engine', 'ejs');
@@ -57,8 +62,17 @@ const urlDatabase = {
   '9sm5xK': 'http://www.google.com',
 };
 
+// route handler for home page
+app.get('/', (req, res) => {
+  if (req.user) {
+    res.redirect('/urls');
+  } else {
+    res.redirect('/login');
+  }
+});
+
 // route handler to display register page
-app.get('/register', (req, res) => {
+app.get('/register', redirectLoggedIn, (req, res) => {
   const templateVars = { user: req.user || '' };
   res.render('register', templateVars);
 });
@@ -92,7 +106,7 @@ app.post('/register', (req, res) => {
 });
 
 // route handler to display login page
-app.get('/login', (req, res) => {
+app.get('/login', redirectLoggedIn, (req, res) => {
   const templateVars = { user: req.user };
   res.render('login', templateVars);
 });
@@ -144,8 +158,12 @@ app.get('/urls', (req, res) => {
 
 // route hanlder to display form + create new short URLs
 app.get('/urls/new', (req, res) => {
-  const templateVars = { user: req.user || '' };
-  res.render('urls_new', templateVars);
+  if (!req.user) {
+    res.redirect('/login');
+  } else {
+    const templateVars = { user: req.user || '' };
+    res.render('urls_new', templateVars);
+  }
 });
 
 // route handler to display details for short URL
@@ -158,6 +176,9 @@ app.get('/urls/:id', (req, res) => {
 
 // route handler to create new short URL
 app.post('/urls', (req, res) => {
+  if (!req.user) {
+    return res.status(401).send('You must be logged in to create short URLS');
+  }
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
   res.redirect(`/urls/${shortURL}`);
@@ -167,6 +188,10 @@ app.post('/urls', (req, res) => {
 app.get('/u/:id', (req, res) => {
   const shortURL = req.params.id;
   const longURL = urlDatabase[shortURL];
+  if (!longURL) {
+    res.status(404).send('URL not found');
+    return;
+  }
   res.redirect(longURL);
 });
 

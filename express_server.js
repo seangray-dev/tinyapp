@@ -54,7 +54,8 @@ app.get('/urls', (req, res) => {
 
 // route hanlder to display form + create new short URLs
 app.get('/urls/new', (req, res) => {
-  res.render('urls_new');
+  const templateVars = { username: req.cookies.username || '' };
+  res.render('urls_new', templateVars);
 });
 
 // route handler to display details for short URL

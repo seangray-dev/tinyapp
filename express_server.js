@@ -2,6 +2,7 @@ const { request } = require('express');
 const express = require('express');
 const app = express();
 const PORT = 8080; // default port 8080
+const cookieParser = require('cookie-parser');
 
 // function to generate random short URL
 function generateRandomString() {
@@ -16,6 +17,7 @@ function generateRandomString() {
 
 // middleware
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // set view engine to EJS
 app.set('view engine', 'ejs');

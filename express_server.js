@@ -91,11 +91,10 @@ app.post('/register', (req, res) => {
   res.redirect('/urls');
 });
 
-// route handler login form submission
-app.post('/login', (req, res) => {
-  const { username } = req.body;
-  res.cookie('username', username);
-  res.redirect('/urls');
+// route handler to display login page
+app.get('/login', (req, res) => {
+  const templateVars = { user: req.user };
+  res.render('login', templateVars);
 });
 
 // route handler for logout

@@ -97,10 +97,38 @@ app.get('/login', (req, res) => {
   res.render('login', templateVars);
 });
 
+app.post('/login', (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email) {
+    res.status(400).send('Email cannot be empty');
+    return;
+  }
+
+  if (!password) {
+    res.status(400).send('Password cannot be empty');
+    return;
+  }
+
+  const user = getUserByEmail(email, users);
+
+  if (!user) {
+    res.status(403).send('Email does not exist');
+  }
+
+  if (user.password !== password) {
+    res.status(403).send('Incorrect password');
+    return;
+  }
+
+  res.cookie('userId', user.id);
+  res.redirect('/urls');
+});
+
 // route handler for logout
 app.post('/logout', (req, res) => {
-  res.clearCookie('username');
-  res.redirect('/urls');
+  res.clearCookie('userId');
+  res.redirect('/login');
 });
 
 // route handler to serve URL database as JSON

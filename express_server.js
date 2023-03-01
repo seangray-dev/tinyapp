@@ -28,6 +28,12 @@ const urlDatabase = {
   '9sm5xK': 'http://www.google.com',
 };
 
+// route handler to display register page
+app.get('/register', (req, res) => {
+  const templateVars = { username: req.cookies.username || '' };
+  res.render('register', templateVars);
+});
+
 // route handler login form submission
 app.post('/login', (req, res) => {
   const { username } = req.body;

@@ -15,6 +15,16 @@ function generateRandomString() {
   return result;
 }
 
+// function to lookup user-email
+function getUserByEmail(email, users) {
+  for (const userId in users) {
+    if (users[userId].email === email) {
+      return users[userId];
+    }
+  }
+  return null;
+}
+
 // middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -56,6 +66,19 @@ app.get('/register', (req, res) => {
 // route handler for registration
 app.post('/register', (req, res) => {
   const { email, password } = req.body;
+
+  // Check if email or password are empty
+  if (!email || !password) {
+    res.status(400).send('Email or password cannot be empty');
+    return;
+  }
+
+  // Check if email already exists in users object
+  if (getUserByEmail(email, users)) {
+    res.status(400).send('Email already exists');
+    return;
+  }
+
   const userId = generateRandomString();
   const newUser = {
     id: userId,

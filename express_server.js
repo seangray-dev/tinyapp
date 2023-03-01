@@ -26,9 +26,11 @@ const urlDatabase = {
   '9sm5xK': 'http://www.google.com',
 };
 
-// route hanldet for root path
-app.get('/', (req, res) => {
-  res.send('Hello!');
+// route handler login form submission
+app.post('/login', (req, res) => {
+  const { username } = req.body;
+  res.cookie('username', username);
+  res.redirect('/urls');
 });
 
 // route handler to serve URL database as JSON

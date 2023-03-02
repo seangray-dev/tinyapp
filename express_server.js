@@ -1,6 +1,7 @@
 const express = require('express');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
+const helpers = require('./helpers')
 
 const app = express();
 const PORT = 8080; // default port 8080
@@ -21,10 +22,6 @@ const generateRandomString = function () {
   return resultArr.join('');
 };
 
-// function to lookup user-email
-const getUserByEmail = function (email) {
-  return Object.values(users).find((user) => user.email === email) || null;
-};
 
 // function to return userURLs
 const urlsForUser = function (id) {
@@ -96,7 +93,7 @@ app.post('/register', (req, res) => {
   }
 
   // Check if email already exists in users object
-  if (getUserByEmail(email, users)) {
+  if (helpers.getUserByEmail(email, users)) {
     res.status(400).send('Email already exists');
     return;
   }
@@ -133,7 +130,7 @@ app.post('/login', (req, res) => {
     return;
   }
 
-  const user = getUserByEmail(email, users);
+  const user = helpers.getUserByEmail(email, users);
 
   if (!user) {
     res.status(403).send('Email does not exist');

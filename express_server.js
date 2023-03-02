@@ -1,9 +1,9 @@
 const express = require('express');
+const cookieSession = require('cookie-session');
+const bcrypt = require('bcryptjs');
 
 const app = express();
 const PORT = 8080; // default port 8080
-const cookieSession = require('cookie-session');
-const bcrypt = require('bcryptjs');
 
 // set view engine to EJS
 app.set('view engine', 'ejs');
@@ -59,9 +59,12 @@ const urlsForUser = function (id) {
 
 // middleware
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieSession({}));
+app.use(cookieSession({
+  name: 'session',
+  keys: ['key1', 'key2'],
+}));
 app.use((req, res, next) => {
-  const { userId } = req.cookies;
+  const userId = req.session.user_id;
   const user = users[userId];
   req.user = user;
   next();
@@ -69,7 +72,7 @@ app.use((req, res, next) => {
 
 // redirect logged in users
 const redirectLoggedIn = function (req, res, next) {
-  const { userId } = req.cookies;
+  const userId = req.session.user_id;
   const user = users[userId];
   if (user) {
     res.redirect('/urls');
@@ -117,7 +120,7 @@ app.post('/register', (req, res) => {
   };
 
   users[userId] = newUser;
-  res.cookie('userId', userId);
+  req.session.user_id = newUser.id;
   res.redirect('/urls');
 });
 
@@ -153,13 +156,13 @@ app.post('/login', (req, res) => {
     return;
   }
 
-  res.cookie('userId', user.id);
+  req.session.user_id = user.id;
   res.redirect('/urls');
 });
 
 // route handler for logout
 app.post('/logout', (req, res) => {
-  res.clearCookie('userId');
+  req.session = null;
   res.redirect('/login');
 });
 
@@ -256,7 +259,7 @@ app.get('/u/:id', (req, res) => {
 
 // route handler to delete short URL
 app.post('/urls/:id/delete', (req, res) => {
-  const { id } = req.params.id;
+  const { id } = req.params;
 
   // Check if the URL with the given ID exists
   if (!urlDatabase[id]) {

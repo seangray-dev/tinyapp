@@ -1,59 +1,9 @@
-const { request } = require('express');
 const express = require('express');
+
 const app = express();
 const PORT = 8080; // default port 8080
-const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
-
-// function to generate random short URL
-function generateRandomString() {
-  const characters =
-    'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let result = '';
-  for (let i = 0; i < 6; i++) {
-    result += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  return result;
-}
-
-// function to lookup user-email
-function getUserByEmail(email, users) {
-  return Object.values(users).find((user) => user.email === email) || null;
-}
-
-// function to return userURLs
-function urlsForUser(id) {
-  const userUrls = {};
-  for (const shortURL in urlDatabase) {
-    if (urlDatabase[shortURL].userID === id) {
-      userUrls[shortURL] = {
-        longURL: urlDatabase[shortURL].longURL,
-        userID: urlDatabase[shortURL].userID,
-      };
-    }
-  }
-  return userUrls;
-}
-
-// middleware
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
-app.use((req, res, next) => {
-  const userId = req.cookies.userId;
-  const user = users[userId];
-  req.user = user;
-  next();
-});
-// redirect logged in users
-const redirectLoggedIn = (req, res, next) => {
-  const userId = req.cookies.userId;
-  const user = users[userId];
-  if (user) {
-    res.redirect('/urls');
-  } else {
-    next();
-  }
-};
 
 // set view engine to EJS
 app.set('view engine', 'ejs');
@@ -70,6 +20,62 @@ const urlDatabase = {
     longURL: 'https://www.google.ca',
     userID: 'aJ48lW',
   },
+};
+
+// function to generate random short URL
+const generateRandomString = function () {
+  const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const resultArr = [];
+
+  for (let i = 0; i < 6;) {
+    resultArr.push(characters.charAt(Math.floor(Math.random() * characters.length)));
+    i = resultArr.length;
+  }
+
+  return resultArr.join('');
+};
+
+// function to lookup user-email
+const getUserByEmail = function (email) {
+  return Object.values(users).find((user) => user.email === email) || null;
+};
+
+// function to return userURLs
+const urlsForUser = function (id) {
+  const userUrls = {};
+  const urls = Object.entries(urlDatabase);
+
+  urls.forEach(([shortURL, url]) => {
+    if (url.userID === id) {
+      userUrls[shortURL] = {
+        longURL: url.longURL,
+        userID: url.userID,
+      };
+    }
+  });
+
+  return userUrls;
+};
+
+// middleware
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieSession({}));
+app.use((req, res, next) => {
+  const { userId } = req.cookies;
+  const user = users[userId];
+  req.user = user;
+  next();
+});
+
+// redirect logged in users
+const redirectLoggedIn = function (req, res, next) {
+  const { userId } = req.cookies;
+  const user = users[userId];
+  if (user) {
+    res.redirect('/urls');
+  } else {
+    next();
+  }
 };
 
 // route handler for home page
@@ -189,21 +195,21 @@ app.get('/urls/new', (req, res) => {
 });
 
 // route handler to create new short URL
-app.post('/urls', (req, res) => {
-  if (!req.user) {
-    return res.status(401).send('You must be logged in to create short URLS');
+app.post('/urls', ({ body: { longURL }, user }, res) => {
+  if (!user) {
+    return res.status(401).send('You must be logged in to create short URLs');
   }
+
   const shortURL = generateRandomString();
-  const longURL = req.body.longURL;
-  const userID = req.user.id;
+  const userID = user.id;
 
   urlDatabase[shortURL] = { longURL, userID };
-  res.redirect(`/urls/${shortURL}`);
+  return res.redirect(`/urls/${shortURL}`);
 });
 
 // route handler to display details for short URL
 app.get('/urls/:id', (req, res) => {
-  const id = req.params.id;
+  const { id } = req.params;
   const url = urlDatabase[id];
 
   // If user is not logged in, show error message
@@ -250,7 +256,7 @@ app.get('/u/:id', (req, res) => {
 
 // route handler to delete short URL
 app.post('/urls/:id/delete', (req, res) => {
-  const id = req.params.id;
+  const { id } = req.params.id;
 
   // Check if the URL with the given ID exists
   if (!urlDatabase[id]) {
@@ -276,7 +282,7 @@ app.post('/urls/:id/delete', (req, res) => {
 
 // route handler to update longURL for a shortURL
 app.post('/urls/:id', (req, res) => {
-  const id = req.params.id;
+  const { id } = req.params.id;
   const newLongURL = req.body.longURL;
 
   // Check if the URL with the given ID exists

@@ -5,22 +5,8 @@ const bcrypt = require('bcryptjs');
 const app = express();
 const PORT = 8080; // default port 8080
 
-// set view engine to EJS
-app.set('view engine', 'ejs');
-
-// user database
 const users = {};
-
-const urlDatabase = {
-  b6UTxQ: {
-    longURL: 'https://www.tsn.ca',
-    userID: 'aJ48lW',
-  },
-  i3BoGr: {
-    longURL: 'https://www.google.ca',
-    userID: 'aJ48lW',
-  },
-};
+const urlDatabase = {};
 
 // function to generate random short URL
 const generateRandomString = function () {
@@ -69,6 +55,9 @@ app.use((req, res, next) => {
   req.user = user;
   next();
 });
+
+// set view engine to EJS
+app.set('view engine', 'ejs');
 
 // redirect logged in users
 const redirectLoggedIn = function (req, res, next) {
@@ -285,7 +274,7 @@ app.post('/urls/:id/delete', (req, res) => {
 
 // route handler to update longURL for a shortURL
 app.post('/urls/:id', (req, res) => {
-  const { id } = req.params.id;
+  const { id } = req.params;
   const newLongURL = req.body.longURL;
 
   // Check if the URL with the given ID exists

@@ -3,6 +3,7 @@ const express = require('express');
 const app = express();
 const PORT = 8080; // default port 8080
 const cookieParser = require('cookie-parser');
+const bcrypt = require('bcryptjs');
 
 // function to generate random short URL
 function generateRandomString() {
@@ -57,18 +58,8 @@ const redirectLoggedIn = (req, res, next) => {
 // set view engine to EJS
 app.set('view engine', 'ejs');
 
-const users = {
-  userRandomID: {
-    id: 'aJ48lW',
-    email: 'user@example.com',
-    password: '123',
-  },
-  user2RandomID: {
-    id: 'user2RandomID',
-    email: 'user2@example.com',
-    password: 'dishwasher-funk',
-  },
-};
+// user database
+const users = {};
 
 const urlDatabase = {
   b6UTxQ: {
@@ -116,7 +107,7 @@ app.post('/register', (req, res) => {
   const newUser = {
     id: userId,
     email,
-    password,
+    password: bcrypt.hashSync(password, 10),
   };
 
   users[userId] = newUser;
@@ -130,6 +121,7 @@ app.get('/login', redirectLoggedIn, (req, res) => {
   res.render('login', templateVars);
 });
 
+// route handler for login
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
 
@@ -150,7 +142,7 @@ app.post('/login', (req, res) => {
     return;
   }
 
-  if (user.password !== password) {
+  if (!bcrypt.compareSync(password, user.password)) {
     res.status(403).send('Incorrect password');
     return;
   }

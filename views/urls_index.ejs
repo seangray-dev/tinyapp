@@ -28,10 +28,10 @@
           </tr>
         </thead>
         <tbody>
-          <% for (let id in urls) { %>
+          <% for (const id in urls) { %>
           <tr>
             <td><%= id %></td>
-            <td><%= urls[id] %></td>
+            <td><%= urls[id].longURL %></td>
             <td>
               <form method="GET" action="/urls/<%= id %>">
                 <button class="btn btn-outline-primary" type="submit">

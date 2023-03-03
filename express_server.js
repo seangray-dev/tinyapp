@@ -2,6 +2,8 @@ const express = require('express');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
 const helpers = require('./helpers');
+const methodOverride = require('method-override')
+
 
 const app = express();
 const PORT = 8080; // default port 8080
@@ -21,6 +23,7 @@ app.use((req, res, next) => {
   req.user = user;
   next();
 });
+app.use(methodOverride('_method'))
 
 // set view engine to EJS
 app.set('view engine', 'ejs');
@@ -213,7 +216,7 @@ app.get('/u/:id', (req, res) => {
 });
 
 // route handler to delete short URL
-app.post('/urls/:id/delete', (req, res) => {
+app.delete('/urls/:id/delete', (req, res) => {
   const { id } = req.params;
 
   // Check if the URL with the given ID exists
@@ -239,7 +242,7 @@ app.post('/urls/:id/delete', (req, res) => {
 });
 
 // route handler to update longURL for a shortURL
-app.post('/urls/:id', (req, res) => {
+app.put('/urls/:id', (req, res) => {
   const { id } = req.params;
   const newLongURL = req.body.longURL;
 

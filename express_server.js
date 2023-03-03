@@ -191,7 +191,7 @@ app.get('/urls/:id', (req, res) => {
     return;
   }
 
-  const templateVars = { id, longURL: url.longURL, user: req.user };
+  const templateVars = { id, longURL: url.longURL, visitCount: url.visitCount || 0, user: req.user, urlDatabase };
   res.render('urls_show', templateVars);
 });
 
@@ -205,6 +205,9 @@ app.get('/u/:id', (req, res) => {
     res.status(404).send('URL not found');
     return;
   }
+
+  // Increment the visits count for the short URL
+  url.visits = url.visits ? url.visits + 1 : 1;
 
   // If logged-in user does not own the URL, show error message
   if (req.user && url.userID !== req.user.id) {

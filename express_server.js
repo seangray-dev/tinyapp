@@ -1,47 +1,13 @@
 const express = require('express');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
+const helpers = require('./helpers');
 
 const app = express();
 const PORT = 8080; // default port 8080
 
 const users = {};
 const urlDatabase = {};
-
-// function to generate random short URL
-const generateRandomString = function () {
-  const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  const resultArr = [];
-
-  for (let i = 0; i < 6;) {
-    resultArr.push(characters.charAt(Math.floor(Math.random() * characters.length)));
-    i = resultArr.length;
-  }
-
-  return resultArr.join('');
-};
-
-// function to lookup user-email
-const getUserByEmail = function (email) {
-  return Object.values(users).find((user) => user.email === email) || null;
-};
-
-// function to return userURLs
-const urlsForUser = function (id) {
-  const userUrls = {};
-  const urls = Object.entries(urlDatabase);
-
-  urls.forEach(([shortURL, url]) => {
-    if (url.userID === id) {
-      userUrls[shortURL] = {
-        longURL: url.longURL,
-        userID: url.userID,
-      };
-    }
-  });
-
-  return userUrls;
-};
 
 // middleware
 app.use(express.urlencoded({ extended: true }));
@@ -59,7 +25,7 @@ app.use((req, res, next) => {
 // set view engine to EJS
 app.set('view engine', 'ejs');
 
-// redirect logged in users
+// function redirect logged in users
 const redirectLoggedIn = function (req, res, next) {
   const userId = req.session.user_id;
   const user = users[userId];
@@ -96,12 +62,12 @@ app.post('/register', (req, res) => {
   }
 
   // Check if email already exists in users object
-  if (getUserByEmail(email, users)) {
+  if (helpers.getUserByEmail(email, users)) {
     res.status(400).send('Email already exists');
     return;
   }
 
-  const userId = generateRandomString();
+  const userId = helpers.generateRandomString();
   const newUser = {
     id: userId,
     email,
@@ -133,7 +99,7 @@ app.post('/login', (req, res) => {
     return;
   }
 
-  const user = getUserByEmail(email, users);
+  const user = helpers.getUserByEmail(email, users);
 
   if (!user) {
     res.status(403).send('Email does not exist');
@@ -171,7 +137,7 @@ app.get('/urls', (req, res) => {
     return;
   }
 
-  const userUrls = urlsForUser(req.user.id);
+  const userUrls = helpers.urlsForUser(req.user.id, urlDatabase);
   const templateVars = { urls: userUrls, user: req.user };
   res.render('urls_index', templateVars);
 });
@@ -192,7 +158,7 @@ app.post('/urls', ({ body: { longURL }, user }, res) => {
     return res.status(401).send('You must be logged in to create short URLs');
   }
 
-  const shortURL = generateRandomString();
+  const shortURL = helpers.generateRandomString();
   const userID = user.id;
 
   urlDatabase[shortURL] = { longURL, userID };

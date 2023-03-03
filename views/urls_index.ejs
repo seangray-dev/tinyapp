@@ -30,7 +30,11 @@
         <tbody>
           <% for (const id in urls) { %>
           <tr>
-            <td><%= id %></td>
+            <td>
+              <a href="/u/<%= id %>" target="_blank">
+                <%= id %>
+            </a>
+          </td>
             <td><%= urls[id].longURL %></td>
             <td>
               <form method="GET" action="/urls/<%= id %>">

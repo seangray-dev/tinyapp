@@ -1,9 +1,8 @@
 const express = require('express');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
+const methodOverride = require('method-override');
 const helpers = require('./helpers');
-const methodOverride = require('method-override')
-
 
 const app = express();
 const PORT = 8080; // default port 8080
@@ -23,7 +22,7 @@ app.use((req, res, next) => {
   req.user = user;
   next();
 });
-app.use(methodOverride('_method'))
+app.use(methodOverride('_method'));
 
 // set view engine to EJS
 app.set('view engine', 'ejs');
@@ -172,26 +171,35 @@ app.post('/urls', ({ body: { longURL }, user }, res) => {
 app.get('/urls/:id', (req, res) => {
   const { id } = req.params;
   const url = urlDatabase[id];
+  const { uniqueVisits } = url;
 
-  // If user is not logged in, show error message
+  // check if user is logged in
   if (!req.user) {
     res.status(401).send('Please login to view this URL');
     return;
   }
 
-  // If URL does not exist, show error message
+  // check if url exists
   if (!url) {
     res.status(404).send('URL not found');
     return;
   }
 
-  // If logged-in user does not own the URL, show error message
+  // if current user does not own this url, send an error
   if (url.userID !== req.user.id) {
     res.status(403).send('You do not have permission to view this URL');
     return;
   }
 
-  const templateVars = { id, longURL: url.longURL, visitCount: url.visitCount || 0, user: req.user, urlDatabase };
+  const templateVars = {
+    id,
+    longURL: url.longURL,
+    visitCount: url.visits,
+    uniqueVisits,
+    user: req.user,
+    urlDatabase,
+  };
+
   res.render('urls_show', templateVars);
 });
 
@@ -200,19 +208,28 @@ app.get('/u/:id', (req, res) => {
   const shortURL = req.params.id;
   const url = urlDatabase[shortURL];
 
-  // If URL does not exist, show error message
+  // check if url exists
   if (!url) {
     res.status(404).send('URL not found');
     return;
   }
 
-  // Increment the visits count for the short URL
-  url.visits = url.visits ? url.visits + 1 : 1;
-
-  // If logged-in user does not own the URL, show error message
+  // if current user does not own this url, send an error
   if (req.user && url.userID !== req.user.id) {
     res.status(403).send('You do not have permission to view this URL');
     return;
+  }
+
+  // increment visit count for url
+  url.visits = url.visits ? url.visits + 1 : 1;
+
+  const cookie = `url_${shortURL}`;
+
+  // check if the user has a cookie for URL
+  if (!req.session[cookie]) {
+    // set cookie if they dont
+    req.session[cookie] = helpers.generateRandomString();
+    url.uniqueVisits = url.uniqueVisits ? url.uniqueVisits + 1 : 1;
   }
 
   res.redirect(url.longURL);

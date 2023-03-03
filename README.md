@@ -13,9 +13,11 @@ TinyApp is a simple web application that allows users to shorten long URLs into 
 
 ## Dependencies
 
+- Node.js
 - Express
 - EJS
-- cookie-parser
+- bcryptjs
+- cookie-session
 
 ## Features
 
@@ -26,6 +28,6 @@ TinyApp is a simple web application that allows users to shorten long URLs into 
 
 ## How to Use
 
-1. Login with your username
+1. Login / Register with your email
 2. Create a new shortened URL by submitting a long URL
 3. Edit or delete existing URLs from the list

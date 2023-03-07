@@ -2,7 +2,12 @@ const express = require('express');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
 const methodOverride = require('method-override');
-const helpers = require('./helpers');
+const {
+  getUserByEmail,
+  generateRandomString,
+  urlsForUser,
+  redirectLoggedIn,
+} = require('./helpers');
 
 const app = express();
 const PORT = 8080; // default port 8080
@@ -26,17 +31,6 @@ app.use(methodOverride('_method'));
 
 // set view engine to EJS
 app.set('view engine', 'ejs');
-
-// function redirect logged in users
-const redirectLoggedIn = function (req, res, next) {
-  const userId = req.session.user_id;
-  const user = users[userId];
-  if (user) {
-    res.redirect('/urls');
-  } else {
-    next();
-  }
-};
 
 // route handler for home page
 app.get('/', (req, res) => {
@@ -64,12 +58,12 @@ app.post('/register', (req, res) => {
   }
 
   // Check if email already exists in users object
-  if (helpers.getUserByEmail(email, users)) {
+  if (getUserByEmail(email, users)) {
     res.status(400).send('Email already exists');
     return;
   }
 
-  const userId = helpers.generateRandomString();
+  const userId = generateRandomString();
   const newUser = {
     id: userId,
     email,
@@ -101,7 +95,7 @@ app.post('/login', (req, res) => {
     return;
   }
 
-  const user = helpers.getUserByEmail(email, users);
+  const user = getUserByEmail(email, users);
 
   if (!user) {
     res.status(403).send('Email does not exist');
@@ -139,7 +133,7 @@ app.get('/urls', (req, res) => {
     return;
   }
 
-  const userUrls = helpers.urlsForUser(req.user.id, urlDatabase);
+  const userUrls = urlsForUser(req.user.id, urlDatabase);
   const templateVars = { urls: userUrls, user: req.user };
   res.render('urls_index', templateVars);
 });
@@ -160,7 +154,7 @@ app.post('/urls', ({ body: { longURL }, user }, res) => {
     return res.status(401).send('You must be logged in to create short URLs');
   }
 
-  const shortURL = helpers.generateRandomString();
+  const shortURL = generateRandomString();
   const userID = user.id;
 
   urlDatabase[shortURL] = { longURL, userID };
@@ -235,7 +229,7 @@ app.get('/u/:id', (req, res) => {
   // check if the user has a cookie for URL
   if (!req.session[cookie]) {
     // set cookie if they dont
-    req.session[cookie] = helpers.generateRandomString();
+    req.session[cookie] = generateRandomString();
     // increment uniqueVisits
     url.uniqueVisits = url.uniqueVisits ? url.uniqueVisits + 1 : 1;
     const visitorId = req.session[cookie];
@@ -308,3 +302,5 @@ app.put('/urls/:id', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
+module.exports = { users };

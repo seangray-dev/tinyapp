@@ -36,4 +36,18 @@ const urlsForUser = function (id, urlDatabase) {
   return userUrls;
 };
 
-module.exports = { getUserByEmail, generateRandomString, urlsForUser };
+
+// function redirect logged in users
+const users = require('./express_server');
+
+const redirectLoggedIn = function (req, res, next) {
+  const userId = req.session.user_id;
+  const user = users[userId];
+  if (user) {
+    res.redirect('/urls');
+  } else {
+    next();
+  }
+};
+
+module.exports = { getUserByEmail, generateRandomString, urlsForUser, redirectLoggedIn, };

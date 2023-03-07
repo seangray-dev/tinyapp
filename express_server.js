@@ -172,6 +172,7 @@ app.get('/urls/:id', (req, res) => {
   const { id } = req.params;
   const url = urlDatabase[id];
   const { uniqueVisits } = url;
+  const { visitors } = url;
 
   // check if user is logged in
   if (!req.user) {
@@ -198,6 +199,7 @@ app.get('/urls/:id', (req, res) => {
     uniqueVisits,
     user: req.user,
     urlDatabase,
+    visitors,
   };
 
   res.render('urls_show', templateVars);
@@ -225,11 +227,25 @@ app.get('/u/:id', (req, res) => {
 
   const cookie = `url_${shortURL}`;
 
+  // check if there are any visitors, if not create an array
+  if (!url.visitors) {
+    url.visitors = [];
+  }
+
   // check if the user has a cookie for URL
   if (!req.session[cookie]) {
     // set cookie if they dont
     req.session[cookie] = helpers.generateRandomString();
+    // increment uniqueVisits
     url.uniqueVisits = url.uniqueVisits ? url.uniqueVisits + 1 : 1;
+    const visitorId = req.session[cookie];
+    const timestamp = new Date();
+    // add new visitor to visitors array
+    url.visitors.push({ visitorId, timestamp });
+  } else {
+    const visitorId = req.session[cookie];
+    const timestamp = new Date();
+    url.visitors.push({ visitorId, timestamp });
   }
 
   res.redirect(url.longURL);

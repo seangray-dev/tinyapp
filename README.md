@@ -11,6 +11,13 @@ TinyApp is a simple web application that allows users to shorten long URLs into 
 3. Run the development server using `npm start`
 4. Open the application at http://localhost:8080
 
+## Preview
+![preview](./docs/preview.gif)
+### URLS Page
+![urls-page](./docs/urls-page.png)
+### Edit URL & Analytics
+![edit-page](./docs/edit-page.png)
+
 ## Dependencies
 
 - Node.js
@@ -25,6 +32,7 @@ TinyApp is a simple web application that allows users to shorten long URLs into 
 - Users can view all their shortened URLs in a list
 - Users can edit and delete their shortened URLs
 - Users can login and logout to access their URLs
+- Users can view analytics for their short URLs
 
 ## How to Use
 
